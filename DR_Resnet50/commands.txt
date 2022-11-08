@@ -1,0 +1,7 @@
+nohup python ./githubs/4471_project/DR_Resnet50/ResNet50_refactor.py --num_epoch 100 --gpu 4 --log_name test_log_DR --test_epoch 1 --task DR 1>> myResNet1_DR.log &
+nohup python ./githubs/4471_project/DR_Resnet50/ResNet50_refactor.py --num_epoch 100 --gpu 4 --log_name test_log_DME --test_epoch 1 --task DR 1>> myResNet1_DME.log &
+
+
+tensorboard --logdir=./githubs/4471_project/DR_Resnet50/logs/test_log_DR --port 8123
+tensorboard --logdir=./githubs/4471_project/DR_Resnet50/logs/test_log_DME --port 8125
+
