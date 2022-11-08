@@ -104,7 +104,7 @@ def main():
     messidor_label_path='/home/chengyuhan/ML/data/DR/Messidor/messidor_data.csv'
     train_itr,test_itr=load_data(messidor_data_path,messidor_label_path,batch_size,args.num_workers,args.task)
 
-    writer = SummaryWriter(f'/home/chengyuhan/ML/learn_code/DR_Resnet50/logs/{args.log_name}')
+    writer = SummaryWriter(f'/home/chengyuhan/githubs/4471_project/DR_Resnet50/logs/{args.log_name}')
     
     lr, num_epochs = args.lr, args.num_epoch
     train(model, train_itr, test_itr, num_epochs, lr, args, writer)
