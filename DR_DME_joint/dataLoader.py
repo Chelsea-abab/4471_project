@@ -34,23 +34,24 @@ class dataSet(data.Dataset):
 
 def ex_image_id(s):
     return s[:s.index('.')]
-def get_label_DR(sheet,img_name):
+def get_labels(sheet,img_name):
     for i in range(len(sheet)):
         if ex_image_id(img_name)==ex_image_id(sheet.loc[i][0]):
             #print(sheet.loc[i][1])
             if int(sheet.loc[i][3])==0:
-                return -1
-            label=int(sheet.loc[i][1])
-            return label
-def get_label_DME(sheet,img_name):
+                return -1,-1
+            labelDR=int(sheet.loc[i][1])
+            labelDME=int(sheet.loc[i][2])
+            return labelDR,labelDME
+'''def get_label_DME(sheet,img_name):
     for i in range(len(sheet)):
         if ex_image_id(img_name)==ex_image_id(sheet.loc[i][0]):
             #print(sheet.loc[i][1])
             if int(sheet.loc[i][3])==0:
                 return -1
             label=int(sheet.loc[i][2])
-            return label
-def load_data(path_img,path_label,batch_size,num,task):
+            return label'''
+def load_data(path_img,path_label,batch_size,num):
     data_tensor=[]
     label_tensor=[]
     images=os.listdir(path_img)
@@ -61,24 +62,26 @@ def load_data(path_img,path_label,batch_size,num,task):
         img=Image.open(f'{path_img}/{image_name}')#////////////////////////
         img = img.convert('RGB')
         #print(image_name)
-        if task=='DR':
+        '''if task=='DR':
             label=get_label_DR(sheet,image_name)
         elif task=='DME':
-            label=get_label_DME(sheet,image_name)
-        if label==-1:
+            label=get_label_DME(sheet,image_name)'''
+        labelDR,labelDME=get_labels(sheet,image_name)
+        if labelDR==-1 or labelDME==-1:
             continue
         #print(image_name,label)
         data_tensor.append(img)
-        label_tensor.append(label)
+        label_tensor.append([labelDR,labelDME])
     randnum = random.randint(0,100)
     random.seed(randnum)
     random.shuffle(data_tensor)
     random.seed(randnum)
     random.shuffle(label_tensor)
-    train_data=data_tensor[100:]
-    train_label=label_tensor[100:]
-    test_data=data_tensor[:100]
-    test_label=label_tensor[:100]
+    train_data=data_tensor[350:]
+    train_label=label_tensor[350:]
+    
+    test_data=data_tensor[:350]
+    test_label=label_tensor[:350]
     train_tensor_dataset=dataSet(train_data,train_label)
     test_tensor_dataset=dataSet(test_data,test_label)
     print("train: ",train_tensor_dataset.__len__(),"  test: ",test_tensor_dataset.__len__())

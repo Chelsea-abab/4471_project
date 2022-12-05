@@ -52,24 +52,34 @@ def evaluate(net, data_iter, device=None):
             #print(net(X))
             metric.add(accuracy(net(X), y), y.numel())
     return metric[0] / metric[1]
-  
+
   
 
 
 def multi_class_auc(all_target, all_output, num_c = None):
     all_output = np.stack(all_output)
-    all_target = label_binarize(all_target, classes=list(range(0, num_c)))
+    if num_c>2:
+        all_target = label_binarize(all_target, classes=list(range(0, num_c)))
+    else:
+        numm=len(all_target)
+        all_target_binarize=[]
+        for i in range(numm):
+            if all_target[i]==0:
+                all_target_binarize.append([1,0])
+            else:
+                all_target_binarize.append([0,1])
+        all_target=np.array(all_target_binarize)
+    #print(torch.Tensor(all_target).shape,torch.Tensor(all_output).shape)
     auc_sum = []
-    for num_class in range(0, num_c):
+    for num_class in range(num_c):
         try:
             #print(all_target[:, num_class], all_output[:, num_class])
             auc = metrics.roc_auc_score(all_target[:, num_class], all_output[:, num_class])
             auc_sum.append(auc)
         except ValueError:
             pass
-
     auc = sum(auc_sum) / float(len(auc_sum))
-    
+        #print(torch.Tensor(all_target).shape,torch.Tensor(all_output_tar).shape)
     return auc
 def auc_softmax(y_hat,y,device,class_num):
   #y_hat=y_hat.to('cpu')
