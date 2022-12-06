@@ -20,16 +20,12 @@ parser.add_argument('--gpu',default=None,type=int,required=True,metavar='gpu num
 parser.add_argument('--ylim',default=1,type=int)
 #parser.add_argument('--fig_name',default='resnet_tem.png',type=str)
 parser.add_argument('--log_name',default='tem_log',type=str)
-parser.add_argument('--test_epoch',default=10,type=int)
-parser.add_argument('--num_workers',default=2,type=int)
+parser.add_argument('--test_epoch',default=1,type=int)
+parser.add_argument('--num_workers',default=4,type=int)
 
 parser.add_argument('--num_class', default=2, type=int)
 parser.add_argument("--multitask", action="store_true")
-parser.add_argument("--liu", action="store_true")
-parser.add_argument("--chen", action="store_true")
 parser.add_argument("--crossCBAM", action="store_true")
-parser.add_argument("--CAN_TS", action="store_true")
-parser.add_argument("--crosspatialCBAM", action="store_true")
 parser.add_argument("--lambda_value", default=0.25, type=float)
 #parser.add_argument("--adam", action="store_true")
 parser.add_argument("--choice", default="both", type=str)
@@ -74,10 +70,10 @@ def train(net, train_iter, test_iter, epoch, lr, args, writer, optimizer):
     train_l_ave=0
     train_acc_ave=0
     print(f' epoch {epoch} start ')
-    if epoch % 30 == 0:
+    if epoch % 20 == 0:
         for p in optimizer.param_groups:
             p['lr'] *= 0.1
-    writer.add_scalar("lr", lr, epoch)
+    #writer.add_scalar("lr", lr, epoch)
     for i, (X, y) in enumerate(train_iter):
         data_time.update(time.time()-start_time)
         #print(i,X.shape)
@@ -102,28 +98,7 @@ def train(net, train_iter, test_iter, epoch, lr, args, writer, optimizer):
         batch_time.update(time.time() - start_time)
         start_time = time.time()
     
-        
-        '''with torch.no_grad():
-            metric.add(l * X.shape[0], accuracy(y_hat, y), X.shape[0])
-        train_l = metric[0] / metric[2]
-        train_acc = metric[1] / metric[2]
-        train_l_ave+=train_l
-        train_acc_ave+=train_acc
-        writer.add_scalar('train_loss', train_l_ave/num_batches, epoch)
-        writer.add_scalar('train_acc', train_acc_ave/num_batches, epoch)
-        if epoch % args.test_epoch == 0 or epoch==num_epochs-1:
-            test_acc = evaluate(net, test_iter)
-            if args.task=='DR':
-                class_num=5
-            elif args.task=='DME':
-                class_num=2
-            test_auc = eva_auc(net,test_iter,device,class_num)
-            print("acc: ",test_acc,"  auc: ",test_auc)
-            writer.add_scalar('test_acc',test_acc,epoch)
-            writer.add_scalar('test_auc',test_auc,epoch)
-        print(f'eopch cost:{time.time() - tem_time:.4f}s')
-    print(f'loss {train_l:.3f}, train acc {train_acc:.3f}, '
-          f'test acc {test_acc:.3f}, test_auc {test_auc:.3f}')'''
+    
     return losses.avg
 
 
@@ -180,14 +155,15 @@ def main():
     
     print("  the porgram start now!  ")       
     
-    from resnet50 import resnet50
-    model = resnet50(num_classes=args.num_class, multitask=args.multitask, liu=args.liu,chen=args.chen, 
-                 CAN_TS=args.CAN_TS, crossCBAM=args.crossCBAM,crosspatialCBAM = args.crosspatialCBAM,  choice=args.choice)
+    from resnet50 import resnet50,resnet18,resnet101
+    model = resnet50(num_classes=args.num_class, multitask=args.multitask, crossCBAM=args.crossCBAM, choice=args.choice)
     
     
     
     model_dict = model.state_dict()
     pretrain_path='/home/chengyuhan/ML/learn_code/pretrain/resnet50-19c8e357.pth'
+    #pretrain_path='/home/chengyuhan/ML/learn_code/pretrain/resnet101-5d3b4d8f.pth'
+    #pretrain_path='/home/chengyuhan/ML/learn_code/pretrain/resnet18-5c106cde.pth'
     pretrained_dict = torch.load(pretrain_path)
     pretrained_dict.pop('fc.weight', None)
     pretrained_dict.pop('fc.bias', None)
@@ -224,7 +200,7 @@ def main():
         writer.add_scalar('Train loss', loss_train, epoch)
 
         # evaluate on validation set
-        if epoch % 5 == 0:
+        if epoch % args.test_epoch == 0:
             acc_dr, acc_dme, joint_acc, auc_dr, auc_dme = validate(test_itr, model, args)
             writer.add_scalar("Val acc_dr", acc_dr, epoch)
             writer.add_scalar("Val acc_dme", acc_dme, epoch)
@@ -236,6 +212,7 @@ def main():
 
             best_aucdr = max(auc_dr, best_aucdr)
             best_accdr = max(acc_dr, best_accdr)
+    print('best joint acc: ',best_acc1,'best dr auc',best_aucdr,'best dr acc',best_accdr)
     
     
     
